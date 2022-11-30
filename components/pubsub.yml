@@ -1,0 +1,23 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: eventhubs-pubsub
+spec:
+  type: pubsub.azure.eventhubs
+  version: v1
+  metadata:
+  # TODO: Change to azure auth - https://docs.dapr.io/reference/components-reference/supported-pubsub/setup-azure-eventhubs/#azure-active-directory-aad-authentication
+  - name: connectionString
+    value:
+    # Boolean value to allow management of EventHub namespace. 
+  - name: enableEntityManagement
+    value: false
+    # Storage account name to use for the EventProcessorHost
+  - name: storageAccountName
+    value:
+    # Storage account key to use for the EventProcessorHost.
+  - name: storageAccountKey
+    value:
+    # Storage container name for the storage account name.
+  - name: storageContainerName
+    value:
