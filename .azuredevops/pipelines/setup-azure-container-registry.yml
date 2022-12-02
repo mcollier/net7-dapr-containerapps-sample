@@ -18,13 +18,13 @@ stages:
         steps:
           - task: AzureCLI@2
             name: BicepDeploy
-            displayName: Azure CLI deployment
+            displayName: Deploy Azure Resource
             inputs:
               azureSubscription: $(AZURE_SERVICE_CONNECTION)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
                 az deployment sub create \
-                  --location ($location) \
+                  --location $(location) \
                   --template-file ./infra/registry.bicep \
                   --parameters name=foo location=$(location)
