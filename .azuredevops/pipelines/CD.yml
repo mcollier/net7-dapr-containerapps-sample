@@ -101,7 +101,7 @@ stages:
     jobs:
       - job: PublishApp
         displayName: Publish container app
-        dependsOn: DeployBicepJob
+        # dependsOn: DeployBicepJob
         steps:
           - task: AzureCLI@2
             name: DeployApp
