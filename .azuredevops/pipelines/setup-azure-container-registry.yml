@@ -1,0 +1,30 @@
+trigger: none
+
+name: 'Provision Azure Container Registry'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: location
+    value: eastus
+
+stages:
+  - stage: ProvisionAzure
+    displayName: Provision Azure resources
+    jobs:
+      - job: DeployBicepJob
+        displayName: Deploy Bicep file
+        steps:
+          - task: AzureCLI@2
+            name: BicepDeploy
+            displayName: Azure CLI deployment
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment sub create \
+                  --location ($location) \
+                  --template-file ./infra/registry.bicep \
+                  --parameters name=foo location=$(location)
