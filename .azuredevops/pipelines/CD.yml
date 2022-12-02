@@ -42,7 +42,7 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment sub create --location $(location) --template-file ./infra/main.bicep  --parameters name=$(name) location=$(location)
+                outputs=$(az deployment sub create --location $(location) --template-file ./infra/main.bicep  --parameters name=$(name) location=$(location))
 
                 echo "Capturing outputs . . ."
                 echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
