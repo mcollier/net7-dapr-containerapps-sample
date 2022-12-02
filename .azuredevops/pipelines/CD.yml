@@ -31,7 +31,7 @@ stages:
   - stage: ProvisionAzure
     displayName: Provision Azure resources
     jobs:
-      - job: DeployBicep
+      - job: DeployBicepJob
         displayName: Deploy Bicep file
         steps:
           - task: AzureCLI@2
@@ -53,9 +53,9 @@ stages:
                   done
       - job: PublishApp
         displayName: Publish container app
-        dependsOn: ProvisionAzure
+        dependsOn: DeployBicepJob
         variables:
-            acrLoginServer: $[ dependencies.ProvisionAzure.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
+            acrLoginServer: $[ dependencies.DeployBicepJob.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
         steps:
           - task: Bash@3
             inputs:
@@ -64,7 +64,7 @@ stages:
 
 
 
-              
+
           # - task: PublishPipelineArtifact@1
           #   displayName: Publish Artifact
           #   inputs:
