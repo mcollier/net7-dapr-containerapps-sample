@@ -29,11 +29,9 @@ module resources 'resources.bicep' = {
     tags: tags
     location: location
     resourceToken: resourceToken
-    // eventHubNamespaceName: '${abbrs.eventHubNamespaces}${resourceToken}'
-    // eventHubName: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
     eventHubSku: 'Standard'
     eventHubConsumerGroupName: 'myapp'
-    // storageAccountName: '${abbrs.storageStorageAccounts}${resourceToken}'
+    applicationId: 'myapp'
     storageAccountType: 'Standard_RAGZRS'
   }
 }

@@ -7,4 +7,10 @@
     <RootNamespace>Collier.Sample</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Dapr.AspNetCore" Version="1.9.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
+    <PackageReference Include="Microsoft.NET.Build.Containers" Version="0.2.7" />
+  </ItemGroup>
+
 </Project>
