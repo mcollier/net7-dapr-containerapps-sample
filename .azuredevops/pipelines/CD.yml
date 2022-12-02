@@ -35,6 +35,7 @@ stages:
         displayName: Deploy Bicep file
         steps:
           - task: AzureCLI@2
+            name: BicepDeploy
             displayName: Azure CLI deployment
             inputs:
               azureSubscription: $(AZURE_SERVICE_CONNECTION)
@@ -43,3 +44,30 @@ stages:
               inlineScript: |
                 az deployment sub create --location $(location) --template-file ./infra/main.bicep  --parameters name=$(name) location=$(location)
 
+                echo "Capturing outputs . . ."
+                echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
+                  while IFS=$"\n" read -r c; do
+                    outputname=$(echo "$c" | jq -r '.[0]')
+                    outputvalue=$(echo "$c" | jq -r '.[1]')
+                    echo "##vso[task.setvariable variable=$outputname;isOutput=true]$outputvalue"
+                  done
+      - job: PublishApp
+        displayName: Publish container app
+        dependsOn: ProvisionAzure
+        variables:
+            acrLoginServer: $[ dependencies.ProvisionAzure.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: echo $(acrLoginServer)
+
+
+
+              
+          # - task: PublishPipelineArtifact@1
+          #   displayName: Publish Artifact
+          #   inputs:
+          #     targetPath: "$(Build.ArtifactStagingDirectory)/bicep"
+          #     artifact: bicep
+# See https://github.com/Azure/bicep/issues/4638#issuecomment-932214561

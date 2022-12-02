@@ -71,6 +71,29 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       }
     }
   }
+
+  resource eventHub2 'eventhubs' = {
+    name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}2'
+    properties: {
+      messageRetentionInDays: 7
+      partitionCount: 3
+    }
+
+    resource consumerGroup 'consumergroups' = {
+      name: eventHubConsumerGroupName
+      properties: {
+      }
+    }
+
+    resource listenAuthorizationRule 'authorizationRules' = {
+      name: 'listen'
+      properties: {
+        rights: [
+          'Listen'
+        ]
+      }
+    }
+  }
 }
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
@@ -163,7 +186,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
       metadata: [
         {
           name: 'connectionString'
-          value: eventHubNamespace::eventHub::listenAuthorizationRule.listKeys().primaryConnectionString
+          value: eventHubNamespace::eventHub2::listenAuthorizationRule.listKeys().primaryConnectionString
         }
         {
           name: 'consumerGroup'
@@ -189,102 +212,104 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
   }
 }
 
-resource app 'Microsoft.App/containerApps@2022-03-01' = {
-  name: '${abbrs.appContainerApps}${resourceToken}'
-  location: location
-  tags: union(tags, { 'azd-service-name': applicationId })
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    managedEnvironmentId: containerAppsEnvironment.id
-    configuration: {
-      activeRevisionsMode: 'Single'
-      // ingress: {
-      //   external: false
-      //   targetPort: 80
-      //   transport: 'auto'
-      // }
-      secrets: [
-        {
-          name: 'registry-password'
-          value: containerRegistry.listCredentials().passwords[0].value
-        }
-        {
-          name: 'eventhub-connection'
-          value: eventHubNamespace::eventHub::listenAuthorizationRule.listKeys().primaryConnectionString
-        }
-        {
-          name: 'storage-connection'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-      ]
-      registries: [
-        {
-          server: '${containerRegistry.name}.azurecr.io'
-          username: containerRegistry.name
-          passwordSecretRef: 'registry-password'
-        }
-      ]
-      dapr: {
-        enabled: true
-        appId: applicationId
-        appProtocol: 'http'
-        appPort: 80
-      }
-    }
-    template: {
-      containers: [
-        {
-          image: '${containerRegistry.name}.azurecr.io/collier/net7-dapr-aca-sample:latest'
-          name: 'main'
-          env: [
-            {
-              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-              // TODO: Move to Key Vault
-              value: applicationInsights.properties.ConnectionString
-            }
-          ]
-          resources: {
-            cpu: 1
-            memory: '2.0Gi'
-          }
-        }
-      ]
-      scale: {
-        maxReplicas: 3
-        minReplicas: 1
+// resource app 'Microsoft.App/containerApps@2022-03-01' = {
+//   name: '${abbrs.appContainerApps}${resourceToken}'
+//   location: location
+//   tags: union(tags, { 'azd-service-name': applicationId })
+//   identity: {
+//     type: 'SystemAssigned'
+//   }
+//   properties: {
+//     managedEnvironmentId: containerAppsEnvironment.id
+//     configuration: {
+//       activeRevisionsMode: 'Single'
+//       // ingress: {
+//       //   external: false
+//       //   targetPort: 80
+//       //   transport: 'auto'
+//       // }
+//       secrets: [
+//         {
+//           name: 'registry-password'
+//           value: containerRegistry.listCredentials().passwords[0].value
+//         }
+//         {
+//           name: 'eventhub-connection'
+//           value: eventHubNamespace::eventHub2::listenAuthorizationRule.listKeys().primaryConnectionString
+//         }
+//         {
+//           name: 'storage-connection'
+//           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+//         }
+//       ]
+//       registries: [
+//         {
+//           server: '${containerRegistry.name}.azurecr.io'
+//           username: containerRegistry.name
+//           passwordSecretRef: 'registry-password'
+//         }
+//       ]
+//       dapr: {
+//         enabled: true
+//         appId: applicationId
+//         appProtocol: 'http'
+//         appPort: 80
+//       }
+//     }
+//     template: {
+//       containers: [
+//         {
+//           image: '${containerRegistry.name}.azurecr.io/collier/net7-dapr-aca-sample:latest'
+//           name: 'main'
+//           env: [
+//             {
+//               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+//               // TODO: Move to Key Vault
+//               value: applicationInsights.properties.ConnectionString
+//             }
+//           ]
+//           resources: {
+//             cpu: 1
+//             memory: '2.0Gi'
+//           }
+//         }
+//       ]
+//       scale: {
+//         maxReplicas: 3
+//         minReplicas: 1
 
-        // How do I know if this is right? 
-        // I don't think this is right . . . each new revision seems to reply the full event stream. 
-        // Checkpoints don't seem to be set correctly.  Why?
-        rules: [
-          {
-            name: 'eventhub-trigger'
-            custom: {
-              type: 'azure-eventhub'
-              metadata: {
-                consumerGroup: eventHubConsumerGroupName
-                unprocessedEventThreshold: '64' // default
-                activationUnprocessedEventThreshold: '0' // default
-                blobContainer: storageAccount::blob::container.name
-                cloud: 'AzurePublicCloud' // default
-                checkpointStrategy: 'goSdk' // use goSdk for Dapr
-              }
-              auth: [
-                {
-                  secretRef: 'eventhub-connection'
-                  triggerParameter: 'connection'
-                }
-                {
-                  secretRef: 'storage-connection'
-                  triggerParameter: 'storageConnection'
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
-  }
-}
+//         // How do I know if this is right? 
+//         // I don't think this is right . . . each new revision seems to reply the full event stream. 
+//         // Checkpoints don't seem to be set correctly.  Why?
+//         rules: [
+//           {
+//             name: 'eventhub-trigger'
+//             custom: {
+//               type: 'azure-eventhub'
+//               metadata: {
+//                 consumerGroup: eventHubConsumerGroupName
+//                 unprocessedEventThreshold: '64' // default
+//                 activationUnprocessedEventThreshold: '0' // default
+//                 blobContainer: storageAccount::blob::container.name
+//                 cloud: 'AzurePublicCloud' // default
+//                 checkpointStrategy: 'goSdk' // use goSdk for Dapr
+//               }
+//               auth: [
+//                 {
+//                   secretRef: 'eventhub-connection'
+//                   triggerParameter: 'connection'
+//                 }
+//                 {
+//                   secretRef: 'storage-connection'
+//                   triggerParameter: 'storageConnection'
+//                 }
+//               ]
+//             }
+//           }
+//         ]
+//       }
+//     }
+//   }
+// }
+
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.properties.loginServer
