@@ -1,0 +1,23 @@
+trigger: none
+
+name: 'Deploy Application'
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: ContainerizeApp
+    displayName: Containerize .NET Application
+    jobs:
+      - job: BuildDotNet
+        displayName: Build .NET App
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Use .NET'
+            inputs:
+              version: 7.x
+          - task: DotNetCoreCLI@2
+            name: Build
+            inputs:
+              command: 'build'
+              projects: ./source
+              arguments: '--configuration Release'
