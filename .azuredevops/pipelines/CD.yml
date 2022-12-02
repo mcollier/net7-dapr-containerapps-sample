@@ -28,31 +28,24 @@ stages:
   - stage: ProvisionAzure
     displayName: Provision Azure resources
     jobs:
-      # - job: DeployBicepJob
-      #   displayName: Deploy Bicep file
-      #   steps:
-      #     - task: AzureCLI@2
-      #       name: BicepDeploy
-      #       displayName: Azure CLI deployment
-      #       inputs:
-      #         azureSubscription: $(AZURE_SERVICE_CONNECTION)
-      #         scriptType: bash
-      #         scriptLocation: inlineScript
-      #         inlineScript: |
-      #           outputs=$(az deployment sub create \
-      #             --location ${{ parameters.location }} \
-      #             --template-file ./infra/main.bicep \
-      #             --parameters \
-      #                 name=${{ parameters.environmentName }} \
-      #                 location=$(location))
-
-      #           echo "Capturing outputs . . ."
-      #           echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
-      #             while IFS=$"\n" read -r c; do
-      #               outputname=$(echo "$c" | jq -r '.[0]')
-      #               outputvalue=$(echo "$c" | jq -r '.[1]')
-      #               echo "##vso[task.setvariable variable=$outputname;isOutput=true]$outputvalue"
-      #             done
+      - job: DeployBicepJob
+        displayName: Deploy Bicep file
+        steps:
+          - task: AzureCLI@2
+            name: BicepDeploy
+            displayName: Azure CLI deployment
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment sub create \
+                  --location ${{ parameters.location }} \
+                  --template-file ./infra/main.bicep \
+                  --parameters \
+                      name=${{ parameters.environmentName }} \
+                      location=$(location)
+                
       - job: BuildDotNet
         displayName: Build .NET App
         # dependsOn: DeployBicepJob
@@ -63,59 +56,66 @@ stages:
             displayName: 'Use .NET'
             inputs:
               version: 7.x
+          
+          # Build the app (probably don't need this since doing a Publish next.)
           - task: DotNetCoreCLI@2
             name: Build
             inputs:
               command: 'build'
               projects: ./source
               arguments: '--configuration Release'
-          # - task: DockerInstaller@0
-          #   inputs:
-          #     dockerVersion: '17.09.0-ce'
+
+          # This does a build and publish.
           - task: DotNetCoreCLI@2
             name: Publish
             inputs:
               command: 'publish'
               arguments: '--os linux --arch x64 -p:PublishProfile=DefaultContainer'
               projects: ./source
-          # - task: Docker@2
-          #   name: DockerLogin
-          #   displayName: ACR Login
-          #   inputs:
-          #     containerRegistry: $(ACR_SERVICE_CONNECTION)
-          #     command: login
-          # - task: Docker@2
-          #   name: DockerTag
-          #   displayName: Tag container for ACR
-          #   inputs:
-          #     command: 
-          # - task: Docker@2
-          #   name: DockerBuild
-          #   displayName: DockerBuild
-          #   inputs:
-          #     command: build
-          #     containerRegistry: 
+
           - task: DockerInstaller@0
             inputs:
               dockerVersion: '17.09.0-ce'
+          
+          # Tag the image in order to push to ACR.
           - task: Bash@3
             inputs:
               targetType: inline
               script: |
                 docker tag slimy-crawdad:1.0.0 $(ACR_URL)/$(imageRepository):$(Build.BuildId)
+          
+          # Push the iamge to ACR.
           - task: Docker@2
             name: DockerPush  
             displayName: Push container to ACR
             inputs:
               command: push
-              # repository: $(ACR_URL)/$(imageRepository)
               repository: $(imageRepository)
               containerRegistry: $(ACR_SERVICE_CONNECTION)
               tags: |
                 $(Build.BuildId)
 
-      # - job: PublishApp
-      #   displayName: Publish container app
+      - job: PublishApp
+        displayName: Publish container app
+        steps:
+          - task: AzureCLI@2
+            name: DeployApp
+            displayName: Deploy Application
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create \
+                  --resource-group rg-mcnet7dapracasample \
+                  --template-file ./infra/modules/event-receiver.bicep \
+                  --parameters \
+                      name=${{ parameters.environmentName }}  \
+                      image=$(ACR_URL)/$(imageRepository):$(Build.BuildId) \
+                      containerAppName=main \
+                      daprAppId=myapp \
+                      consumerGroupName=myapp
+
       #   dependsOn: DeployBicepJob
       #   variables:
       #       acrLoginServer: $[ dependencies.DeployBicepJob.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
@@ -151,3 +151,20 @@ stages:
   #             command: 'build'
   #             projects: ./source
   #             arguments: '--configuration Release'
+
+
+
+  # outputs=$(az deployment sub create \
+                #   --location ${{ parameters.location }} \
+                #   --template-file ./infra/main.bicep \
+                #   --parameters \
+                #       name=${{ parameters.environmentName }} \
+                #       location=$(location))
+
+                # echo "Capturing outputs . . ."
+                # echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
+                #   while IFS=$"\n" read -r c; do
+                #     outputname=$(echo "$c" | jq -r '.[0]')
+                #     outputvalue=$(echo "$c" | jq -r '.[1]')
+                #     echo "##vso[task.setvariable variable=$outputname;isOutput=true]$outputvalue"
+                #   done
