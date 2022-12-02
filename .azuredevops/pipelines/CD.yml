@@ -41,8 +41,5 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment sub create \
-                  --location $(location) \
-                  --template-file ./infra/main.bicep \
-                  --parameters name=$(name) location=$(location)
+                az deployment sub create --location $(location) --template-file ./infra/main.bicep  --parameters name=$(name) location=$(location)
 
