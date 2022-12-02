@@ -4,14 +4,12 @@ name: 'Deploy Application'
 pool:
   vmImage: 'ubuntu-latest'
 
-parameters:
+variables:
   - name: name
-    type: string
-    default: mscnet7dapracasample
+    value: mscnet7dapracasample
   
   - name: location
-    type: string
-    default: eastus
+    value: eastus
 
 stages:
   - stage: ContainerizeApp
