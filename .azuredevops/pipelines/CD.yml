@@ -55,7 +55,7 @@ stages:
           #   inputs:
           #     dockerVersion: '17.09.0-ce'
           - task: DotNetCoreCLI@2
-            name: Build
+            name: Publish
             inputs:
               command: 'publish'
               arguments: '--os linux --arch x64 -p:PublishProfile=DefaultContainer'
