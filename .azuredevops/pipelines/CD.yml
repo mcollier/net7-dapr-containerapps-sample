@@ -1,6 +1,7 @@
 # The following variables should be set in the pipeline
 # AZURE_SERVICE_CONNECTION
 # ACR_SERVICE_CONNECTION
+# ACR_URL
 
 trigger: none
 
@@ -88,15 +89,29 @@ stages:
           #   displayName: Tag container for ACR
           #   inputs:
           #     command: 
+          # - task: Docker@2
+          #   name: DockerBuild
+          #   displayName: DockerBuild
+          #   inputs:
+          #     command: build
+          #     containerRegistry: 
+          - task: DockerInstaller@0
+            inputs:
+              dockerVersion: '17.09.0-ce'
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: |
+                docker tag slimy-crawdad:1.0.0 $(ACR_URL)/$(imageRepository):$(Build.BuildId)
           - task: Docker@2
             name: DockerPush  
             displayName: Push container to ACR
             inputs:
               command: push
-              repository: $(imageRepository)
+              repository: $(ACR_URL)/$(imageRepository)
               containerRegistry: $(ACR_SERVICE_CONNECTION)
               tags: |
-                'latest'
+                $(Build.BuildId)
 
       # - job: PublishApp
       #   displayName: Publish container app
