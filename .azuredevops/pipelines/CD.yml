@@ -108,7 +108,8 @@ stages:
             displayName: Push container to ACR
             inputs:
               command: push
-              repository: $(ACR_URL)/$(imageRepository)
+              # repository: $(ACR_URL)/$(imageRepository)
+              repository: $(imageRepository)
               containerRegistry: $(ACR_SERVICE_CONNECTION)
               tags: |
                 $(Build.BuildId)
