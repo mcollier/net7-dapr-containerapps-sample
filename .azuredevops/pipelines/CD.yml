@@ -4,6 +4,15 @@ name: 'Deploy Application'
 pool:
   vmImage: 'ubuntu-latest'
 
+parameters:
+  - name: name
+    type: string
+    default: mscnet7dapracasample
+  
+  - name: location
+    type: string
+    default: eastus
+
 stages:
   - stage: ContainerizeApp
     displayName: Containerize .NET Application
@@ -21,3 +30,21 @@ stages:
               command: 'build'
               projects: ./source
               arguments: '--configuration Release'
+  - stage: ProvisionAzure
+    displayName: Provision Azure resources
+    jobs:
+      - job: DeployBicep
+        displayName: Deploy Bicep file
+        steps:
+          - task: AzureCLI@2
+            displayName: Azure CLI deployment
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment sub create \
+                  --location $(location) \
+                  --template-file ./infra/main.bicep \
+                  --parameters name=$(name) location=$(location)
+
