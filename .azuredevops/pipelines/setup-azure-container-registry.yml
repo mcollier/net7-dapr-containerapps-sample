@@ -5,9 +5,16 @@ name: 'Provision Azure Container Registry'
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
+parameters:
+  - name: environmentName
+    type: string
+    displayName: Environment Name
+    default: mcnet7dapracasample
+
   - name: location
-    value: eastus
+    type: string
+    displayName: Azure Region
+    default: eastus
 
 stages:
   - stage: ProvisionAzure
@@ -27,4 +34,4 @@ stages:
                 az deployment sub create \
                   --location $(location) \
                   --template-file ./infra/registry.bicep \
-                  --parameters name=foo location=$(location)
+                  --parameters name=$(environmentName) location=$(location)
