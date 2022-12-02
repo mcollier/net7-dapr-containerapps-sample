@@ -43,7 +43,10 @@ stages:
                   --location ${{ parameters.location }} \
                   --template-file ./infra/main.bicep \
                   --parameters name=${{ parameters.environmentName }} location=${{ parameters.location }}
-                
+  
+  - stage: BuildApplication                
+    displayName: Build Application
+    jobs:
       - job: BuildDotNet
         displayName: Build .NET App
         # dependsOn: DeployBicepJob
@@ -93,8 +96,12 @@ stages:
               tags: |
                 $(Build.BuildId)
 
+  - stage: PublishApp
+    displayName: Publish Application
+    jobs:
       - job: PublishApp
         displayName: Publish container app
+        dependsOn: DeployBicepJob
         steps:
           - task: AzureCLI@2
             name: DeployApp
