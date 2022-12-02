@@ -35,8 +35,14 @@
 				"ms-azuretools.vscode-bicep",
 				"ms-vscode.vscode-node-azure-pack",
 				"ms-dotnettools.csharp",
-				"ms-dotnettools.vscode-dotnet-runtime"
-			]
+				"ms-dotnettools.vscode-dotnet-runtime",
+				"ms-azure-devops.azure-pipelines"
+			],
+			"settings": {
+				"files.associations": {
+					"**/.azuredevops/pipelines/*.yml": "azure-pipelines"
+				}
+			}
 		}
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.
