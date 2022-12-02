@@ -1,45 +1,62 @@
+# The following variables should be set in the pipeline
+# AZURE_SERVICE_CONNECTION
+# ACR_SERVICE_CONNECTION
+
 trigger: none
 
 name: 'Deploy Application'
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  - name: name
-    value: mscnet7dapracasample
+parameters:
+  - name: environmentName
+    type: string
+    displayName: Environment Name
+    default: mcnet7dapracasample
   
   - name: location
-    value: eastus
+    type: string
+    displayName: Azure Region
+    default: eastus
+
+variables:
+  - name: imageRepository
+    value: samples
 
 stages:
   - stage: ProvisionAzure
     displayName: Provision Azure resources
     jobs:
-      - job: DeployBicepJob
-        displayName: Deploy Bicep file
-        steps:
-          - task: AzureCLI@2
-            name: BicepDeploy
-            displayName: Azure CLI deployment
-            inputs:
-              azureSubscription: $(AZURE_SERVICE_CONNECTION)
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                outputs=$(az deployment sub create --location $(location) --template-file ./infra/main.bicep  --parameters name=$(name) location=$(location))
+      # - job: DeployBicepJob
+      #   displayName: Deploy Bicep file
+      #   steps:
+      #     - task: AzureCLI@2
+      #       name: BicepDeploy
+      #       displayName: Azure CLI deployment
+      #       inputs:
+      #         azureSubscription: $(AZURE_SERVICE_CONNECTION)
+      #         scriptType: bash
+      #         scriptLocation: inlineScript
+      #         inlineScript: |
+      #           outputs=$(az deployment sub create \
+      #             --location ${{ parameters.location }} \
+      #             --template-file ./infra/main.bicep \
+      #             --parameters \
+      #                 name=${{ parameters.environmentName }} \
+      #                 location=$(location))
 
-                echo "Capturing outputs . . ."
-                echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
-                  while IFS=$"\n" read -r c; do
-                    outputname=$(echo "$c" | jq -r '.[0]')
-                    outputvalue=$(echo "$c" | jq -r '.[1]')
-                    echo "##vso[task.setvariable variable=$outputname;isOutput=true]$outputvalue"
-                  done
+      #           echo "Capturing outputs . . ."
+      #           echo $outputs | jq -c '.properties.outputs | to_entries[] | [.key, .value.value]' |
+      #             while IFS=$"\n" read -r c; do
+      #               outputname=$(echo "$c" | jq -r '.[0]')
+      #               outputvalue=$(echo "$c" | jq -r '.[1]')
+      #               echo "##vso[task.setvariable variable=$outputname;isOutput=true]$outputvalue"
+      #             done
       - job: BuildDotNet
         displayName: Build .NET App
-        dependsOn: DeployBicepJob
-        variables:
-            acrLoginServer: $[ dependencies.DeployBicepJob.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
+        # dependsOn: DeployBicepJob
+        # variables:
+        #     acrLoginServer: $[ dependencies.DeployBicepJob.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
         steps:
           - task: UseDotNet@2
             displayName: 'Use .NET'
@@ -60,7 +77,27 @@ stages:
               command: 'publish'
               arguments: '--os linux --arch x64 -p:PublishProfile=DefaultContainer'
               projects: ./source
+          # - task: Docker@2
+          #   name: DockerLogin
+          #   displayName: ACR Login
+          #   inputs:
+          #     containerRegistry: $(ACR_SERVICE_CONNECTION)
+          #     command: login
+          # - task: Docker@2
+          #   name: DockerTag
+          #   displayName: Tag container for ACR
+          #   inputs:
+          #     command: 
           - task: Docker@2
+            name: DockerPush  
+            displayName: Push container to ACR
+            inputs:
+              command: push
+              repository: $(imageRepository)
+              containerRegistry: $(ACR_SERVICE_CONNECTION)
+              tags: |
+                'latest'
+
       # - job: PublishApp
       #   displayName: Publish container app
       #   dependsOn: DeployBicepJob
