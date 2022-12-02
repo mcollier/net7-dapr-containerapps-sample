@@ -32,6 +32,6 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 az deployment sub create \
-                  --location ${{ variables.location }} \
+                  --location ${{ parameters.location }} \
                   --template-file ./infra/registry.bicep \
-                  --parameters name=${{ variables.environmentName }} location=${{ variables.location }}
+                  --parameters name=${{ parameters.environmentName }} location=${{ parameters.location }}
