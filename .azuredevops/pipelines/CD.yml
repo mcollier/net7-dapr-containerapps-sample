@@ -3,7 +3,7 @@
 # ACR_SERVICE_CONNECTION
 # ACR_URL
 
-trigger: none
+# trigger: none
 
 name: 'Deploy Application'
 pool:
