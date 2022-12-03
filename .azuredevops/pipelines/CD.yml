@@ -5,6 +5,11 @@
 
 # trigger: none
 
+trigger:
+  paths:
+    include:
+      - ./infra
+      
 name: 'Deploy Application'
 pool:
   vmImage: 'ubuntu-latest'
