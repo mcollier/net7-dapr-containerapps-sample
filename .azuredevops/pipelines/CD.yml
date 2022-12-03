@@ -11,7 +11,7 @@ trigger:
       - main
   paths:
     include:
-      - ./infra
+      - infra
 
 name: 'Deploy Application'
 pool:
