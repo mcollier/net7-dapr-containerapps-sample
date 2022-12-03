@@ -70,7 +70,7 @@ jobs:
         displayName: Push container to ACR
         inputs:
           command: push
-          repository: $(imageRepository)
+          repository: ${{ parameters.imageRepository }}
           containerRegistry: $(ACR_SERVICE_CONNECTION)
           tags: |
             $(Build.BuildId)
