@@ -5,7 +5,6 @@ param location string = resourceGroup().location
 param name string
 param image string
 param containerAppName string
-// param ingress bool = false
 param port int = 80
 @description('Identifier for the application.')
 param daprAppId string
