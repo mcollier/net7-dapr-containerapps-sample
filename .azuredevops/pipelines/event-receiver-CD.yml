@@ -1,4 +1,7 @@
-trigger: 
+trigger:
+  branches:
+    include:
+      - main
   paths:
     include:
       - ./source

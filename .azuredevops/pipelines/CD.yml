@@ -6,10 +6,13 @@
 # trigger: none
 
 trigger:
+  branches:
+    include:
+      - main
   paths:
     include:
       - ./infra
-      
+
 name: 'Deploy Application'
 pool:
   vmImage: 'ubuntu-latest'
