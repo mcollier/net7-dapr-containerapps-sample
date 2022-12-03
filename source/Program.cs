@@ -16,7 +16,7 @@ app.MapGet("/", () => "Hello World!");
 
 app.MapPost("/events", (Person person) =>
 {
-    app.Logger.LogInformation("Howdy, {firstname}!", person.FirstName);
+    app.Logger.LogInformation("My friend, {firstname}!", person.FirstName);
     return Results.Accepted();
 });
 
