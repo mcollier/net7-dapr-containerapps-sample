@@ -84,6 +84,7 @@ jobs:
           scriptLocation: inlineScript
           scriptType: bash
           inlineScript: |
+            az extension add --name containerapp --yes
             az containerapp update \
               --name ${{ parameters.containerAppName}} \
               --resource-group ${{ parameters.resourceGroupName}} \
