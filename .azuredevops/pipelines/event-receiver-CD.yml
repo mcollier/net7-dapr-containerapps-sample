@@ -11,22 +11,18 @@ name: 'Event Receiver CD'
 pool:
   vmImage: 'ubuntu-latest'
 
-parameters:
+variables:
   - name: containerAppName
-    displayName: Container App Name
-    type: string
+    value: ca-2vqjsphgnkgbe
+
   - name: resourceGroupName
-    displayName: Resource Group Name
-    type: string
+    value: rg-mcnet7dapracasample
+
   - name: acrLoginServer
-    displayName: Azure Container Registery Login Server
-    type: string
+    value: cr2vqjsphgnkgbe.azurecr.io
+    
   - name: imageRepository
-    displayName: Image Repository
-    type: string
-  # - name: imageTag
-  #   displayName: Image Tag
-  #   type: string
+    value: samples
 
 jobs:
   - job: BuildDotNet
@@ -65,7 +61,7 @@ jobs:
         inputs:
           targetType: inline
           script: |
-            docker tag slimy-crawdad:1.0.0 ${{ parameters.acrLoginServer }}/${{ parameters.imageRepository }}:$(Build.BuildId)
+            docker tag slimy-crawdad:1.0.0 ${{ variables.acrLoginServer }}/${{ variables.imageRepository }}:$(Build.BuildId)
       
       # Push the iamge to ACR.
       - task: Docker@2
@@ -73,7 +69,7 @@ jobs:
         displayName: Push container to ACR
         inputs:
           command: push
-          repository: ${{ parameters.imageRepository }}
+          repository: ${{ variables.imageRepository }}
           containerRegistry: $(ACR_SERVICE_CONNECTION)
           tags: |
             $(Build.BuildId)
@@ -89,6 +85,6 @@ jobs:
           inlineScript: |
             az extension add --name containerapp --yes
             az containerapp update \
-              --name ${{ parameters.containerAppName}} \
-              --resource-group ${{ parameters.resourceGroupName}} \
-              --image ${{ parameters.acrLoginServer}}/${{ parameters.imageRepository }}:$(Build.BuildId)
+              --name ${{ variables.containerAppName}} \
+              --resource-group ${{ variables.resourceGroupName}} \
+              --image ${{ variables.acrLoginServer}}/${{ variables.imageRepository }}:$(Build.BuildId)
