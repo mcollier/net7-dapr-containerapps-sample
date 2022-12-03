@@ -1,0 +1,90 @@
+trigger: 
+  paths:
+    include:
+      - ./source
+
+name: 'Event Receiver CD'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: containerAppName
+    displayName: Container App Name
+    type: string
+  - name: resourceGroupName
+    displayName: Resource Group Name
+    type: string
+  - name: acrLoginServer
+    displayName: Azure Container Registery Login Server
+    type: string
+  - name: imageRepository
+    displayName: Image Repository
+    type: string
+  # - name: imageTag
+  #   displayName: Image Tag
+  #   type: string
+
+jobs:
+  - job: BuildDotNet
+    displayName: Build .NET App
+    # dependsOn: DeployBicepJob
+    # variables:
+    #     acrLoginServer: $[ dependencies.DeployBicepJob.outputs['BicepDeploy.azurE_CONTAINER_REGISTRY_ENDPOINT'] ]
+    steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET'
+        inputs:
+          version: 7.x
+      
+      # Build the app (probably don't need this since doing a Publish next.)
+      - task: DotNetCoreCLI@2
+        name: Build
+        inputs:
+          command: 'build'
+          projects: ./source
+          arguments: '--configuration Release'
+
+      # This does a build and publish.
+      - task: DotNetCoreCLI@2
+        name: Publish
+        inputs:
+          command: 'publish'
+          arguments: '--os linux --arch x64 -p:PublishProfile=DefaultContainer'
+          projects: ./source
+
+      - task: DockerInstaller@0
+        inputs:
+          dockerVersion: '17.09.0-ce'
+      
+      # Tag the image in order to push to ACR.
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: |
+            docker tag slimy-crawdad:1.0.0 ${{ parameters.acrLoginServer }}/${{ parameters.imageRepository }}:$(Build.BuildId)
+      
+      # Push the iamge to ACR.
+      - task: Docker@2
+        name: DockerPush  
+        displayName: Push container to ACR
+        inputs:
+          command: push
+          repository: $(imageRepository)
+          containerRegistry: $(ACR_SERVICE_CONNECTION)
+          tags: |
+            $(Build.BuildId)
+
+      # Update Azure Container App
+      - task: AzureCLI@2
+        displayName: Update Azure Container App
+        name: ACAUpdate
+        inputs:
+          azureSubscription: $(AZURE_SERVICE_CONNECTION)
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript: |
+            az containerapp update \
+              --name ${{ parameters.containerAppName}} \
+              --resource-group ${{ parameters.resourceGroupName}} \
+              --image ${{ parameters.acrLoginServer}}/${{ parameters.imageRepository }}:$(Build.BuildId)
