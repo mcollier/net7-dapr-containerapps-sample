@@ -143,6 +143,19 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: '${abbrs.keyVaultVaults}${resourceToken}'
+  location: location
+  properties: {
+    enabledForTemplateDeployment: true
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+  }
+}
+
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: '${abbrs.appManagedEnvironments}${resourceToken}'
   location: location
