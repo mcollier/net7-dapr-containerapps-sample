@@ -10,7 +10,7 @@ param name string
 param location string
 
 @description('Id of the user or app to assign app roles')
-param principalId string = '363a0986-6ba9-4b2d-8455-1d95d2086ca1'
+param principalId string = '567827d0-782f-481d-8eb7-33d73a4ee0cf'
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, name))
