@@ -34,6 +34,8 @@ param tags object
 @description('Identifier for the application.')
 param applicationId string
 
+param principalId string
+
 var abbrs = loadJsonContent('abbreviations.json')
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
@@ -153,6 +155,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
+    accessPolicies: [
+      {
+        objectId: principalId
+        permissions: {
+          secrets: [
+            'list'
+            'get'
+          ]
+        }
+        tenantId: subscription().tenantId
+      }
+    ]
   }
 }
 

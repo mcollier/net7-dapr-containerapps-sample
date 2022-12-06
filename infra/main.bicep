@@ -10,7 +10,7 @@ param name string
 param location string
 
 @description('Id of the user or app to assign app roles')
-param principalId string = ''
+param principalId string = '363a0986-6ba9-4b2d-8455-1d95d2086ca1'
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, name))
@@ -33,8 +33,8 @@ module resources 'resources.bicep' = {
     eventHubConsumerGroupName: 'myapp'
     applicationId: 'myapp'
     storageAccountType: 'Standard_RAGZRS'
+    principalId: principalId
   }
 }
 
 output AZURE_LOCATION string = location
-// output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.AZURE_CONTAINER_REGISTRY_ENDPOINT
