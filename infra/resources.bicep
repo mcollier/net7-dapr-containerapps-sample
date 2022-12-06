@@ -95,6 +95,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
         ]
       }
     }
+
   }
 }
 
@@ -167,6 +168,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
         tenantId: subscription().tenantId
       }
     ]
+  }
+
+  resource eventHubConnectionStringSecret 'secrets' = {
+    name: 'eventHubConnectionStringSecret'
+    properties: {
+      value: eventHubNamespace::eventHub2::listenAuthorizationRule.listKeys().primaryConnectionString
+    }
   }
 }
 
