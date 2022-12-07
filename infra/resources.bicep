@@ -38,6 +38,15 @@ param principalId string
 
 var abbrs = loadJsonContent('abbreviations.json')
 
+//Storage Blob Data Contributor built-in role
+var storageBlobDataContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+
+// Event Hub Receiver built-in role
+var eventHubReceiverRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')
+
+// Event Hub Sender built-in role
+var eventHubSenderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
+
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: '${abbrs.eventHubNamespaces}${resourceToken}'
   location: location
@@ -188,7 +197,7 @@ module eventHubSenderRoleAssignment 'modules/role-assignment.bicep' = {
   params: {
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
+    roleDefinitionId: eventHubSenderRoleId
   }
 }
 
@@ -197,7 +206,7 @@ module eventHubReceiverRoleAssignment 'modules/role-assignment.bicep' = {
   params: {
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')
+    roleDefinitionId: eventHubReceiverRoleId
   }
 }
 
@@ -206,7 +215,7 @@ module storageRoleAssignment 'modules/role-assignment.bicep' = {
   params: {
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: storageBlobDataContributorRoleId
   }
 }
 
