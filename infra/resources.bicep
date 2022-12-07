@@ -219,49 +219,6 @@ module storageRoleAssignment 'modules/role-assignment.bicep' = {
   }
 }
 
-// @description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor')
-// resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-//   scope: resourceGroup()
-//   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-// }
-
-// resource storageRoleAsignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: guid(resourceGroup().id, managedIdentity.properties.principalId, 'dd'storageRoleDefinition.id)
-//   properties: {
-//     principalId: managedIdentity.properties.principalId
-//     roleDefinitionId: storageRoleDefinition.id
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
-// resource eventHubSenderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-//   scope: eventHubNamespace
-//   name: '2b629674-e913-4c01-ae53-ef4638d8f975'
-// }
-
-// resource eventHubReceiverRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-//   scope: eventHubNamespace
-//   name: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
-// }
-
-// resource eventHubSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: guid(resourceGroup().id, eventHubSenderRoleDefinition.id)
-//   properties: {
-//     principalId: managedIdentity.properties.principalId
-//     roleDefinitionId: eventHubSenderRoleDefinition.id
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
-// resource eventHubReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: guid(resourceGroup().id, eventHubReceiverRoleDefinition.id)
-//   properties: {
-//     principalId: managedIdentity.properties.principalId
-//     roleDefinitionId: eventHubReceiverRoleDefinition.id
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: '${abbrs.appManagedEnvironments}${resourceToken}'
   location: location
@@ -289,6 +246,10 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
         {
           name: 'eventHubNamespace'
           value: eventHubNamespace.name
+        }
+        {
+          name: 'eventHub'
+          value: eventHubNamespace::eventHub.name
         }
         {
           name: 'consumerGroup'
