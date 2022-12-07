@@ -52,7 +52,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
 
   resource eventHub 'eventhubs' = {
-    name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}2'
+    name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
     properties: {
       messageRetentionInDays: 7
       partitionCount: 3
@@ -77,7 +77,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
 
   resource ordersEventHub 'eventhubs' = {
-    name: '${abbrs.eventHubNamespacesEventHubs}-orders'
+    name: '${abbrs.eventHubNamespacesEventHubs}orders'
     properties: {
       messageRetentionInDays: 7
       partitionCount: 2
@@ -175,6 +175,26 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     properties: {
       value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
     }
+  }
+}
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
+  name: '${abbrs.managedIdentityUserAssignedIdentities}-${applicationId}'
+  location: location
+}
+
+@description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor')
+resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  scope: storageAccount
+  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+}
+
+resource storageRoleAsignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, storageRoleDefinition.id)
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    roleDefinitionId: storageRoleDefinition.id
+    principalType: 'ServicePrincipal'
   }
 }
 

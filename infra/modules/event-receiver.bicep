@@ -40,8 +40,8 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing =
       name: consumerGroupName
     }
 
-    resource listenAuthorizationRule 'authorizationRules' existing = {
-      name: 'listen'
+    resource authorizationRule 'authorizationRules' existing = {
+      name: 'ListenSendRule'
     }
   }
 }
@@ -64,7 +64,7 @@ resource app 'Microsoft.App/containerApps@2022-03-01' = {
         }
         {
           name: 'eventhub-connection'
-          value: eventHubNamespace::eventHub::listenAuthorizationRule.listKeys().primaryConnectionString
+          value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
         }
         {
           name: 'storage-connection'
