@@ -91,6 +91,8 @@ resource app 'Microsoft.App/containerApps@2022-03-01' = {
         appId: daprAppId
         appProtocol: 'http'
         appPort: port
+        enableApiLogging: true
+        logLevel: 'debug'
       }
     }
     template: {

@@ -244,6 +244,10 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
         //   value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
         // }
         {
+          name: 'azureClientId'
+          value: managedIdentity.properties.clientId
+        }
+        {
           name: 'eventHubNamespace'
           value: eventHubNamespace.name
         }
