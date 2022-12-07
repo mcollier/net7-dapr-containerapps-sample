@@ -184,7 +184,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-
 }
 
 @description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor')
-resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: storageAccount
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
