@@ -52,29 +52,6 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
 
   resource eventHub 'eventhubs' = {
-    name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
-    properties: {
-      messageRetentionInDays: 7
-      partitionCount: 1
-    }
-
-    resource consumerGroup 'consumergroups' = {
-      name: eventHubConsumerGroupName
-      properties: {
-      }
-    }
-
-    resource listenAuthorizationRule 'authorizationRules' = {
-      name: 'listen'
-      properties: {
-        rights: [
-          'Listen'
-        ]
-      }
-    }
-  }
-
-  resource eventHub2 'eventhubs' = {
     name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}2'
     properties: {
       messageRetentionInDays: 7
@@ -87,15 +64,38 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       }
     }
 
-    resource listenAuthorizationRule 'authorizationRules' = {
-      name: 'listen'
+    resource authorizationRule 'authorizationRules' = {
+      name: 'ListenSendRule'
       properties: {
         rights: [
           'Listen'
+          'Send'
         ]
       }
     }
 
+  }
+
+  resource ordersEventHub 'eventhubs' = {
+    name: '${abbrs.eventHubNamespacesEventHubs}-orders'
+    properties: {
+      messageRetentionInDays: 7
+      partitionCount: 2
+    }
+
+    resource consumerGroup 'consumergroups' = {
+      name: 'subscriber'
+    }
+
+    resource authorizationRule 'authorizationRules' = {
+      name: 'ListenSendRule'
+      properties: {
+        rights: [
+          'Listen'
+          'Send'
+        ]
+      }
+    }
   }
 }
 
@@ -173,7 +173,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   resource eventHubConnectionStringSecret 'secrets' = {
     name: 'eventHubConnectionStringSecret'
     properties: {
-      value: eventHubNamespace::eventHub2::listenAuthorizationRule.listKeys().primaryConnectionString
+      value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
     }
   }
 }
@@ -200,7 +200,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
       metadata: [
         {
           name: 'connectionString'
-          value: eventHubNamespace::eventHub2::listenAuthorizationRule.listKeys().primaryConnectionString
+          value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
         }
         {
           name: 'consumerGroup'
