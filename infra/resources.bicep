@@ -183,48 +183,75 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-
   location: location
 }
 
-@description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor')
-resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: storageAccount
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-}
-
-resource storageRoleAsignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, storageRoleDefinition.id)
-  properties: {
+module eventHubSenderRoleAssignment 'modules/role-assignment.bicep' = {
+  name: 'EventHubSenderRoleAssignment'
+  params: {
     principalId: managedIdentity.properties.principalId
-    roleDefinitionId: storageRoleDefinition.id
     principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
   }
 }
 
-resource eventHubSenderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: eventHubNamespace
-  name: '2b629674-e913-4c01-ae53-ef4638d8f975'
-}
-
-resource eventHubReceiverRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: eventHubNamespace
-  name: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
-}
-
-resource eventHubSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, eventHubSenderRoleDefinition.id)
-  properties: {
+module eventHubReceiverRoleAssignment 'modules/role-assignment.bicep' = {
+  name: 'EventHubReceiverRoleAssignment'
+  params: {
     principalId: managedIdentity.properties.principalId
-    roleDefinitionId: eventHubSenderRoleDefinition.id
     principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')
   }
 }
 
-resource eventHubReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, eventHubReceiverRoleDefinition.id)
-  properties: {
+module storageRoleAssignment 'modules/role-assignment.bicep' = {
+  name: 'StorageRoleAssignment'
+  params: {
     principalId: managedIdentity.properties.principalId
-    roleDefinitionId: eventHubReceiverRoleDefinition.id
     principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
   }
 }
+
+// @description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor')
+// resource storageRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+//   scope: resourceGroup()
+//   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+// }
+
+// resource storageRoleAsignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   name: guid(resourceGroup().id, managedIdentity.properties.principalId, 'dd'storageRoleDefinition.id)
+//   properties: {
+//     principalId: managedIdentity.properties.principalId
+//     roleDefinitionId: storageRoleDefinition.id
+//     principalType: 'ServicePrincipal'
+//   }
+// }
+
+// resource eventHubSenderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+//   scope: eventHubNamespace
+//   name: '2b629674-e913-4c01-ae53-ef4638d8f975'
+// }
+
+// resource eventHubReceiverRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+//   scope: eventHubNamespace
+//   name: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
+// }
+
+// resource eventHubSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   name: guid(resourceGroup().id, eventHubSenderRoleDefinition.id)
+//   properties: {
+//     principalId: managedIdentity.properties.principalId
+//     roleDefinitionId: eventHubSenderRoleDefinition.id
+//     principalType: 'ServicePrincipal'
+//   }
+// }
+
+// resource eventHubReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   name: guid(resourceGroup().id, eventHubReceiverRoleDefinition.id)
+//   properties: {
+//     principalId: managedIdentity.properties.principalId
+//     roleDefinitionId: eventHubReceiverRoleDefinition.id
+//     principalType: 'ServicePrincipal'
+//   }
+// }
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: '${abbrs.appManagedEnvironments}${resourceToken}'
