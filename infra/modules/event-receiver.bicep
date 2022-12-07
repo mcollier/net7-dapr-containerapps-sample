@@ -46,12 +46,20 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing =
   }
 }
 
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' existing = {
+  name: '${abbrs.managedIdentityUserAssignedIdentities}${daprAppId}'
+}
+
 resource app 'Microsoft.App/containerApps@2022-03-01' = {
   name: '${abbrs.appContainerApps}${resourceToken}'
   location: location
   tags: union(tags, { 'azd-service-name': containerAppName })
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+
   }
   properties: {
     managedEnvironmentId: env.id

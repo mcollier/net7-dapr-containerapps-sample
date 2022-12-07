@@ -179,7 +179,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
 }
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
-  name: '${abbrs.managedIdentityUserAssignedIdentities}-${applicationId}'
+  name: '${abbrs.managedIdentityUserAssignedIdentities}${applicationId}'
   location: location
 }
 
@@ -194,6 +194,34 @@ resource storageRoleAsignment 'Microsoft.Authorization/roleAssignments@2022-04-0
   properties: {
     principalId: managedIdentity.properties.principalId
     roleDefinitionId: storageRoleDefinition.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource eventHubSenderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: eventHubNamespace
+  name: '2b629674-e913-4c01-ae53-ef4638d8f975'
+}
+
+resource eventHubReceiverRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: eventHubNamespace
+  name: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
+}
+
+resource eventHubSenderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, eventHubSenderRoleDefinition.id)
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    roleDefinitionId: eventHubSenderRoleDefinition.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource eventHubReceiverRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, eventHubReceiverRoleDefinition.id)
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    roleDefinitionId: eventHubReceiverRoleDefinition.id
     principalType: 'ServicePrincipal'
   }
 }
@@ -218,9 +246,13 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
       componentType: 'bindings.azure.eventhubs'
       version: 'v1'
       metadata: [
+        // {
+        //   name: 'connectionString'
+        //   value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
+        // }
         {
-          name: 'connectionString'
-          value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
+          name: 'eventHubNamespace'
+          value: eventHubNamespace.name
         }
         {
           name: 'consumerGroup'
@@ -230,10 +262,10 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
           name: 'storageAccountName'
           value: storageAccount.name
         }
-        {
-          name: 'storageAccountKey'
-          value: storageAccount.listKeys().keys[0].value
-        }
+        // {
+        //   name: 'storageAccountKey'
+        //   value: storageAccount.listKeys().keys[0].value
+        // }
         {
           name: 'storageContainerName'
           value: storageAccount::blob::container.name
