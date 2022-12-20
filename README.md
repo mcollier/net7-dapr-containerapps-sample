@@ -1,6 +1,7 @@
 # .NET 7, Dapr, and Azure Container Apps Sample
 
 :construction:This project is under development.:construction:
+This is a bit messy at the moment.  :(
 
 ## Getting Started
 

@@ -91,6 +91,9 @@ resource app 'Microsoft.App/containerApps@2022-03-01' = {
         appId: daprAppId
         appProtocol: 'http'
         appPort: port
+
+        //TODO: Submit feedback to get these properties listed in schema.
+        // https://github.com/Azure/bicep/issues/784#issuecomment-1341836608
         enableApiLogging: true
         logLevel: 'debug'
       }

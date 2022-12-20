@@ -1,0 +1,20 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: events
+spec:
+  type: bindings.azure.eventhubs
+  version: v1
+  metadata:
+  - name: connectionString
+    value: ''
+  - name: consumerGroup
+    value: myapp
+  - name: storageAccountName
+    value: ''
+    # Storage account key to use for the EventProcessorHost.
+  - name: storageAccountKey
+    value: ''
+    # Storage container name for the storage account name.
+  - name: storageContainerName
+    value: event-hub-checkpoints

@@ -38,6 +38,7 @@ param principalId string
 
 var abbrs = loadJsonContent('abbreviations.json')
 
+// Azure built-in roles (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles)
 //Storage Blob Data Contributor built-in role
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 

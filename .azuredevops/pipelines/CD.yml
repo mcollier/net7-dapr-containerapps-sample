@@ -3,8 +3,6 @@
 # ACR_SERVICE_CONNECTION
 # ACR_URL
 
-# trigger: none
-
 trigger:
   branches:
     include:

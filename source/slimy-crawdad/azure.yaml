@@ -1,6 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
 name: net7-dapr-containerapps-sample
+services:
+    api:
+        project: ./source
+        language: csharp
+        host: containerapp
 infra:
     provider: bicep
     path: infra
