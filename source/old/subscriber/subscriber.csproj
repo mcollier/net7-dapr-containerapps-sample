@@ -4,13 +4,11 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>cron_publisher</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapr.Client" Version="1.9.0" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.9.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-    <PackageReference Include="Microsoft.NET.Build.Containers" Version="0.2.7" />
   </ItemGroup>
 
 </Project>

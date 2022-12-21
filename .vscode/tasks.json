@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/source/slimy-crawdad.csproj",
+                "${workspaceFolder}/source/signal-generator/signal-generator.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/source/slimy-crawdad.csproj",
+                "${workspaceFolder}/source/signal-generator/signal-generator.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/source/slimy-crawdad.csproj"
+                "${workspaceFolder}/source/signal-generator/signal-generator.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

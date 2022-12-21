@@ -34,7 +34,7 @@ param tags object
 @description('Identifier for the application.')
 param applicationId string
 
-param principalId string
+// param principalId string
 
 var abbrs = loadJsonContent('abbreviations.json')
 
@@ -47,6 +47,9 @@ var eventHubReceiverRoleId = 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
 
 // Event Hub Sender built-in role
 var eventHubSenderRoleId = '2b629674-e913-4c01-ae53-ef4638d8f975'
+
+// ACR Pull built-in role
+var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: '${abbrs.eventHubNamespaces}${resourceToken}'
@@ -61,8 +64,9 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
     zoneRedundant: true
   }
 
-  resource eventHub 'eventhubs' = {
-    name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
+  resource sensorsEventHub 'eventhubs' = {
+    // name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
+    name: 'sensors'
     properties: {
       messageRetentionInDays: 7
       partitionCount: 3
@@ -74,20 +78,21 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       }
     }
 
-    resource authorizationRule 'authorizationRules' = {
-      name: 'ListenSendRule'
-      properties: {
-        rights: [
-          'Listen'
-          'Send'
-        ]
-      }
-    }
+    // resource authorizationRule 'authorizationRules' = {
+    //   // name: 'ListenSendRule'
+    //   name: 'ListenRule'
+    //   properties: {
+    //     rights: [
+    //       'Listen'
+    //       // 'Send'
+    //     ]
+    //   }
+    // }
 
   }
 
   resource ordersEventHub 'eventhubs' = {
-    name: '${abbrs.eventHubNamespacesEventHubs}orders'
+    name: 'orders'
     properties: {
       messageRetentionInDays: 7
       partitionCount: 2
@@ -97,15 +102,15 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       name: 'subscriber'
     }
 
-    resource authorizationRule 'authorizationRules' = {
-      name: 'ListenSendRule'
-      properties: {
-        rights: [
-          'Listen'
-          'Send'
-        ]
-      }
-    }
+    // resource authorizationRule 'authorizationRules' = {
+    //   name: 'ListenSendRule'
+    //   properties: {
+    //     rights: [
+    //       'Listen'
+    //       'Send'
+    //     ]
+    //   }
+    // }
   }
 }
 
@@ -156,37 +161,37 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
-  name: '${abbrs.keyVaultVaults}${resourceToken}'
-  location: location
-  properties: {
-    enabledForTemplateDeployment: true
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    tenantId: subscription().tenantId
-    accessPolicies: [
-      {
-        objectId: principalId
-        permissions: {
-          secrets: [
-            'list'
-            'get'
-          ]
-        }
-        tenantId: subscription().tenantId
-      }
-    ]
-  }
+// resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+//   name: '${abbrs.keyVaultVaults}${resourceToken}'
+//   location: location
+//   properties: {
+//     enabledForTemplateDeployment: true
+//     sku: {
+//       family: 'A'
+//       name: 'standard'
+//     }
+//     tenantId: subscription().tenantId
+//     accessPolicies: [
+//       {
+//         objectId: principalId
+//         permissions: {
+//           secrets: [
+//             'list'
+//             'get'
+//           ]
+//         }
+//         tenantId: subscription().tenantId
+//       }
+//     ]
+//   }
 
-  resource eventHubConnectionStringSecret 'secrets' = {
-    name: 'eventHubConnectionStringSecret'
-    properties: {
-      value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
-    }
-  }
-}
+//   resource eventHubConnectionStringSecret 'secrets' = {
+//     name: 'eventHubConnectionStringSecret'
+//     properties: {
+//       value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
+//     }
+//   }
+// }
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: '${abbrs.managedIdentityUserAssignedIdentities}${applicationId}'
@@ -220,6 +225,15 @@ module storageRoleAssignment 'modules/role-assignment.bicep' = {
   }
 }
 
+module acrRoleAssignment 'modules/role-assignment.bicep' = {
+  name: 'AcrRoleAssignment'
+  params: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: acrPullRoleId
+  }
+}
+
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: '${abbrs.appManagedEnvironments}${resourceToken}'
   location: location
@@ -240,10 +254,6 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
       componentType: 'bindings.azure.eventhubs'
       version: 'v1'
       metadata: [
-        // {
-        //   name: 'connectionString'
-        //   value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
-        // }
         {
           name: 'azureClientId'
           value: managedIdentity.properties.clientId
@@ -254,27 +264,71 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
         }
         {
           name: 'eventHub'
-          value: eventHubNamespace::eventHub.name
+          value: eventHubNamespace::sensorsEventHub.name
         }
         {
           name: 'consumerGroup'
-          value: eventHubConsumerGroupName
+          value: 'signal-receiver'
+          // value: eventHubConsumerGroupName
         }
         {
           name: 'storageAccountName'
           value: storageAccount.name
         }
-        // {
-        //   name: 'storageAccountKey'
-        //   value: storageAccount.listKeys().keys[0].value
-        // }
         {
           name: 'storageContainerName'
           value: storageAccount::blob::container.name
         }
       ]
       scopes: [
-        applicationId
+        // applicationId
+      ]
+    }
+  }
+
+  resource daprCronComponent 'daprComponents' = {
+    name: 'cron'
+    properties: {
+      version: 'v1'
+      componentType: 'bindings.cron'
+      metadata: [
+        {
+          name: 'schedule'
+          value: '@every 15s'
+        }
+        {
+          name: 'route'
+          value: '/scheduled'
+        }
+      ]
+    }
+  }
+
+  resource daprPubSubComponent 'daprComponents' = {
+    name: 'orders-pubsub'
+    properties: {
+      version: 'v1'
+      componentType: 'pubsub.azure.eventhubs'
+      metadata: [
+        {
+          name: 'azureClientId'
+          value: managedIdentity.properties.clientId
+        }
+        {
+          name: 'eventHubNamespace'
+          value: eventHubNamespace.name
+        }
+        {
+          name: 'storageAccountName'
+          value: storageAccount.name
+        }
+        {
+          name: 'storageContainerName'
+          value: 'event-hub-checkpoints'
+        }
+      ]
+      scopes: [
+
       ]
     }
   }

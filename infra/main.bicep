@@ -9,8 +9,8 @@ param name string
 @description('Primary location for all resources.')
 param location string
 
-@description('Id of the user or app to assign app roles')
-param principalId string = '8b8cf5d7-cf70-4bfc-b58a-c84783aed893'
+// @description('Id of the user or app to assign app roles')
+// param principalId string = '8b8cf5d7-cf70-4bfc-b58a-c84783aed893'
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, name))
@@ -33,7 +33,7 @@ module resources 'resources.bicep' = {
     eventHubConsumerGroupName: 'myapp'
     applicationId: 'myapp'
     storageAccountType: 'Standard_RAGZRS'
-    principalId: principalId
+    // principalId: principalId
   }
 }
 
