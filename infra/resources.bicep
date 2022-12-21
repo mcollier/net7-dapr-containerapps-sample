@@ -77,18 +77,6 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       properties: {
       }
     }
-
-    // resource authorizationRule 'authorizationRules' = {
-    //   // name: 'ListenSendRule'
-    //   name: 'ListenRule'
-    //   properties: {
-    //     rights: [
-    //       'Listen'
-    //       // 'Send'
-    //     ]
-    //   }
-    // }
-
   }
 
   resource ordersEventHub 'eventhubs' = {
@@ -101,16 +89,6 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
     resource consumerGroup 'consumergroups' = {
       name: 'subscriber'
     }
-
-    // resource authorizationRule 'authorizationRules' = {
-    //   name: 'ListenSendRule'
-    //   properties: {
-    //     rights: [
-    //       'Listen'
-    //       'Send'
-    //     ]
-    //   }
-    // }
   }
 }
 
@@ -160,38 +138,6 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
     WorkspaceResourceId: logAnalytics.id
   }
 }
-
-// resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
-//   name: '${abbrs.keyVaultVaults}${resourceToken}'
-//   location: location
-//   properties: {
-//     enabledForTemplateDeployment: true
-//     sku: {
-//       family: 'A'
-//       name: 'standard'
-//     }
-//     tenantId: subscription().tenantId
-//     accessPolicies: [
-//       {
-//         objectId: principalId
-//         permissions: {
-//           secrets: [
-//             'list'
-//             'get'
-//           ]
-//         }
-//         tenantId: subscription().tenantId
-//       }
-//     ]
-//   }
-
-//   resource eventHubConnectionStringSecret 'secrets' = {
-//     name: 'eventHubConnectionStringSecret'
-//     properties: {
-//       value: eventHubNamespace::eventHub::authorizationRule.listKeys().primaryConnectionString
-//     }
-//   }
-// }
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: '${abbrs.managedIdentityUserAssignedIdentities}${applicationId}'
