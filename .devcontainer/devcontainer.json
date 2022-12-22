@@ -30,6 +30,7 @@
 				"ms-azuretools.azure-dev",
 				"ms-azuretools.vscode-dapr",
 				"ms-azuretools.vscode-bicep",
+				"ms-azuretools.vscode-azurecontainerapps",
 				"ms-vscode.vscode-node-azure-pack",
 				"ms-dotnettools.csharp",
 				"ms-dotnettools.vscode-dotnet-runtime",
@@ -43,7 +44,7 @@
 		}
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "dapr uninstall --all && dapr init && dotnet restore ./source/slimy-crawdad && dotnet restore ./source/publisher && dotnet restore ./source/subscriber",
+	"postCreateCommand": "./.devcontainer/setup-devcontainer.sh",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
 		5000,
