@@ -12,7 +12,7 @@ IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
 // See https://aka.ms/new-console-template for more information
 Console.WriteLine("Hello, World!");
 
-int maxSignals = 10000;
+int maxSignals = 100;
 
 // The Event Hub connection string is set as a user secert. Use the Event Hub namespace.
 // dotnet user-secrets set "EventHub:ConnectionString" "EVENT-HUB-CONNECTION-STRING"
