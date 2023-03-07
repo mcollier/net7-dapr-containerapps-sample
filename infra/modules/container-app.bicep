@@ -46,7 +46,8 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
         appPort: containerPort
         appProtocol: 'http'
 
-        //TODO: Submit feedback to get these properties listed in schema - https://github.com/Azure/bicep/issues/784#issuecomment-1341836608
+        //Submit feedback to get these properties listed in schema - https://github.com/Azure/bicep/issues/784#issuecomment-1341836608
+        //Again at https://github.com/Azure/bicep-types-az/issues/1405
         enableApiLogging: true
         logLevel: 'debug'
       }
@@ -56,8 +57,6 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
           identity: managedIdentity.id
         }
       ]
-      // secrets: [
-      // ]
       secrets: secrets
     }
     template: {
@@ -71,9 +70,6 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
       scale: {
         minReplicas: scaleMin
         maxReplicas: scaleMax
-        // rules: [
-
-        // ]
         rules: scaleRules
       }
     }
