@@ -8,18 +8,18 @@ spec:
   version: v1
   metadata:
   - name: consumerGroup
-    value: signal-receiver
+    value: signal-receiver-dev
   
   # The connection string for the event hub itself, NOT the namespace!
   - name: connectionString
-    value: Endpoint=sb://evhns-zzktzmonvhvwe.servicebus.windows.net/;SharedAccessKeyName=Manage;SharedAccessKey=DUcALASO1eqQhV5yPC/IQE4u11QSmOaUS+AEhKbmTy0=;EntityPath=sensors
+    value: [EVENT-HUB-NAMESPACE-SAS-CONNECTION-STRING]
   
   - name: storageAccountName
-    value: stzzktzmonvhvwe
+    value: [STORAGE-ACCOUNT-NAME]
   
   # Storage account key to use for the EventProcessorHost.
   - name: storageAccountKey
-    value: /arMJ2F7C2tdXWoqAZexq7tHsB4OLvUNdv/PrnpG+U6Q+DOGp5/kbhzqoB60U55u8Rn1QqW28Xb1+AStKsIL+g==
+    value: [STORAGE-ACCOUNT-KEY]
   
   # Storage container name for the storage account name.
   - name: storageContainerName
