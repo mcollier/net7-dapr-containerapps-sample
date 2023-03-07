@@ -12,7 +12,8 @@
 			"version": "16"
 		},
 		"ghcr.io/devcontainers/features/azure-cli:1": {
-			"version": "latest"
+			"version": "latest",
+			"installBicep": "true"
 		},
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/devcontainers/features/github-cli:1": {
