@@ -31,25 +31,27 @@ param resourceToken string
 @description('Tags to be applied to Azure resources.')
 param tags object
 
-@description('Identifier for the application.')
-param applicationId string
+// @description('Identifier for the application.')
+// param applicationId string
 
 // param principalId string
 
 var abbrs = loadJsonContent('abbreviations.json')
 
 // Azure built-in roles (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles)
-//Storage Blob Data Contributor built-in role
-var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+var roleIds = [
+  // ACR Pull built-in role
+  '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
-// Event Hub Receiver built-in role
-var eventHubReceiverRoleId = 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
+  // Event Hub Sender built-in role
+  '2b629674-e913-4c01-ae53-ef4638d8f975'
 
-// Event Hub Sender built-in role
-var eventHubSenderRoleId = '2b629674-e913-4c01-ae53-ef4638d8f975'
+  // Event Hub Receiver built-in role
+  'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
 
-// ACR Pull built-in role
-var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+  //Storage Blob Data Contributor built-in role
+  'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+]
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: '${abbrs.eventHubNamespaces}${resourceToken}'
@@ -61,11 +63,10 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   properties: {
     isAutoInflateEnabled: false
     maximumThroughputUnits: 0
-    zoneRedundant: true
+    zoneRedundant: false
   }
 
   resource sensorsEventHub 'eventhubs' = {
-    // name: '${abbrs.eventHubNamespacesEventHubs}${resourceToken}'
     name: 'sensors'
     properties: {
       messageRetentionInDays: 7
@@ -74,20 +75,6 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
 
     resource consumerGroup 'consumergroups' = {
       name: eventHubConsumerGroupName
-      properties: {
-      }
-    }
-  }
-
-  resource ordersEventHub 'eventhubs' = {
-    name: 'orders'
-    properties: {
-      messageRetentionInDays: 7
-      partitionCount: 2
-    }
-
-    resource consumerGroup 'consumergroups' = {
-      name: 'subscriber'
     }
   }
 }
@@ -140,43 +127,25 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
-  name: '${abbrs.managedIdentityUserAssignedIdentities}${applicationId}'
+  name: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
   location: location
 }
 
-module eventHubSenderRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'EventHubSenderRoleAssignment'
+module roleAssignment 'modules/role-assignment.bicep' = [for (roleId, i) in roleIds: {
+  name: 'roleAssignment-${i}'
   params: {
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: eventHubSenderRoleId
+    roleDefinitionId: roleId
   }
-}
+}]
 
-module eventHubReceiverRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'EventHubReceiverRoleAssignment'
+module acr 'modules/acr.bicep' = {
+  name: 'acr-${resourceToken}'
   params: {
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: eventHubReceiverRoleId
-  }
-}
-
-module storageRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'StorageRoleAssignment'
-  params: {
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: storageBlobDataContributorRoleId
-  }
-}
-
-module acrRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'AcrRoleAssignment'
-  params: {
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: acrPullRoleId
+    tags: tags
+    location: location
+    registryName: '${abbrs.containerRegistryRegistries}${resourceToken}'
   }
 }
 
@@ -214,8 +183,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
         }
         {
           name: 'consumerGroup'
-          value: 'signal-receiver'
-          // value: eventHubConsumerGroupName
+          value: eventHubConsumerGroupName
         }
         {
           name: 'storageAccountName'
@@ -232,50 +200,51 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
     }
   }
 
-  resource daprCronComponent 'daprComponents' = {
-    name: 'cron'
-    properties: {
-      version: 'v1'
-      componentType: 'bindings.cron'
-      metadata: [
-        {
-          name: 'schedule'
-          value: '@every 15s'
-        }
-        {
-          name: 'route'
-          value: '/scheduled'
-        }
-      ]
-    }
-  }
-
-  resource daprPubSubComponent 'daprComponents' = {
-    name: 'orders-pubsub'
-    properties: {
-      version: 'v1'
-      componentType: 'pubsub.azure.eventhubs'
-      metadata: [
-        {
-          name: 'azureClientId'
-          value: managedIdentity.properties.clientId
-        }
-        {
-          name: 'eventHubNamespace'
-          value: eventHubNamespace.name
-        }
-        {
-          name: 'storageAccountName'
-          value: storageAccount.name
-        }
-        {
-          name: 'storageContainerName'
-          value: 'event-hub-checkpoints'
-        }
-      ]
-      scopes: [
-
-      ]
-    }
-  }
 }
+
+// resource daprCronComponent 'daprComponents' = {
+//   name: 'cron'
+//   properties: {
+//     version: 'v1'
+//     componentType: 'bindings.cron'
+//     metadata: [
+//       {
+//         name: 'schedule'
+//         value: '@every 15s'
+//       }
+//       {
+//         name: 'route'
+//         value: '/scheduled'
+//       }
+//     ]
+//   }
+// }
+
+// resource daprPubSubComponent 'daprComponents' = {
+//   name: 'orders-pubsub'
+//   properties: {
+//     version: 'v1'
+//     componentType: 'pubsub.azure.eventhubs'
+//     metadata: [
+//       {
+//         name: 'azureClientId'
+//         value: managedIdentity.properties.clientId
+//       }
+//       {
+//         name: 'eventHubNamespace'
+//         value: eventHubNamespace.name
+//       }
+//       {
+//         name: 'storageAccountName'
+//         value: storageAccount.name
+//       }
+//       {
+//         name: 'storageContainerName'
+//         value: 'event-hub-checkpoints'
+//       }
+//     ]
+//     scopes: [
+
+//     ]
+//   }
+// }

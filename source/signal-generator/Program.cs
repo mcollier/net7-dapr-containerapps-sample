@@ -1,9 +1,9 @@
 ﻿using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
-using signal_generator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
 
 using IHost host = Host.CreateApplicationBuilder().Build();
 
@@ -12,10 +12,12 @@ IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
 // See https://aka.ms/new-console-template for more information
 Console.WriteLine("Hello, World!");
 
-int maxSignals = 100;
+int maxSignals = 10000;
 
-// The Evnet Hub connection string is set as a user secert.
+// The Event Hub connection string is set as a user secert. Use the Event Hub namespace.
+// dotnet user-secrets set "EventHub:ConnectionString" "EVENT-HUB-CONNECTION-STRING"
 var connectionString = config.GetValue<string>("EventHub:ConnectionString");
+Console.WriteLine(connectionString);
 
 var eventHubName = "sensors";
 var rand = new Random();
@@ -42,3 +44,9 @@ await using (var producer = new EventHubProducerClient(connectionString, eventHu
     Console.WriteLine($"Sending {maxSignals} at {DateTime.Now}.");
     await producer.SendAsync(eventBatch);
 }
+
+public record SensorData(
+        [property: JsonPropertyName("sensorId")] string SensorId,
+        [property: JsonPropertyName("temperature")] double Temperature,
+        [property: JsonPropertyName("time")] string Datetime
+        );

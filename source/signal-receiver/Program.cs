@@ -18,7 +18,7 @@ app.MapPost("/events", (SensorData sensor) =>
     return Results.Accepted();
 });
 
-app.Run();
+await app.RunAsync();
 
 
 public record SensorData(

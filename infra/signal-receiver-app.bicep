@@ -1,45 +1,84 @@
 param location string = resourceGroup().location
 
-param eventHubNamespaceName string
-param eventHubName string
-
 param containerRegistryName string
 param imageTag string
-var applicationName = 'signal-receiver'
+param applicationName string
+param containerAppEnvironmentName string
+param managedIdentityName string
 
-param containerAppEnvironmentName string = 'cae-cp2brzfgohm3o'
-param managedIdentityName string = 'id-myapp'
+param eventHubNamespace string
+param eventHub string
+param storageName string
 
 resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existing = {
   name: containerRegistryName
 }
 
-module eventPublisher 'modules/container-app.bicep' = {
+resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
+  name: storageName
+}
+
+resource ehns 'Microsoft.EventHub/namespaces@2022-10-01-preview' existing = {
+  name: eventHubNamespace
+
+  resource eh 'eventhubs' existing = {
+    name: eventHub
+  }
+
+  resource authRule 'authorizationRules' existing = {
+    name: 'RootManageSharedAccessKey'
+  }
+}
+
+module signalReceiver 'modules/container-app.bicep' = {
   name: 'signal-receiver-deploy'
   params: {
     containerAppName: applicationName
-    containerImage: '${acr.properties.loginServer}/sample/signal-receiver:${imageTag}'
+    containerImage: '${acr.properties.loginServer}/signal-receiver:${imageTag}'
     containerPort: 80
     containerRegistryName: acr.name
     containerAppsEnvironmentName: containerAppEnvironmentName
     location: location
     managedIdentityName: managedIdentityName
-    environmentVars: [
-
+    environmentVars: []
+    secrets: [
+      {
+        name: 'eventhub-connection'
+        //value: ehns::eh::authorizationRule.listKeys().primaryConnectionString
+        value: ehns::authRule.listKeys().primaryConnectionString
+      }
+      {
+        name: 'storage-connection'
+        value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storage.listKeys().keys[0].value}'
+      }
+    ]
+    scaleRules: [
+      {
+        name: 'azure-eventhub-scale-rule'
+        custom: {
+          type: 'azure-eventhub'
+          metadata: {
+            consumerGroup: 'signal-receiver'
+            eventHubNamespace: ehns.name
+            eventHubName: ehns::eh.name
+            unprocessedEventThreshold: '64'
+            activationUnprocessedEventThreshold: '0'
+            blobContainer: 'event-hub-checkpoints'
+            storageAccountName: storage.name
+            checkpointStrategy: 'dapr'
+          }
+          auth: [
+            {
+              secretRef: 'eventhub-connection'
+              triggerParameter: 'connection'
+            }
+            {
+              secretRef: 'storage-connection'
+              triggerParameter: 'storageConnection'
+            }
+          ]
+        }
+      }
     ]
   }
-}
-
-resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing = {
-  name: eventHubNamespaceName
-}
-
-resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' existing = {
-  name: eventHubName
-  parent: eventHubNamespace
-}
-
-resource eventHubConsumerGroup 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2021-11-01' = {
-  name: applicationName
-  parent: eventHub
 }

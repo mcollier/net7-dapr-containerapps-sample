@@ -18,7 +18,7 @@ var tags = {
   'azd-env-name': name
 }
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: '${abbrs.resourcesResourceGroups}${name}'
+  name: '${abbrs.resourcesResourceGroups}${name}-${location}'
   location: location
 }
 
@@ -30,10 +30,8 @@ module resources 'resources.bicep' = {
     location: location
     resourceToken: resourceToken
     eventHubSku: 'Standard'
-    eventHubConsumerGroupName: 'myapp'
-    applicationId: 'myapp'
-    storageAccountType: 'Standard_RAGZRS'
-    // principalId: principalId
+    eventHubConsumerGroupName: 'signal-receiver'
+    storageAccountType: 'Standard_LRS'
   }
 }
 

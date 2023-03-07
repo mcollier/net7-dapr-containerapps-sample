@@ -23,7 +23,7 @@ This is a .NET Console application.
 1. Move to the ./source/signal-receiver directory.
 1. Run the app
     ```bash
-    dapr run --app-id signal-receiver --components-path ../components/ --app-port 5000 --log-level info -- dotnet run .
+    dapr run --app-id signal-receiver --resources-path ../components/ --app-port 5000 --log-level info -- dotnet run .
     ```
 1. Build the container
     ```bash
@@ -35,6 +35,7 @@ This is a .NET Console application.
     ```
 1. Push to ACR
     ```bash
+    az acr login --name crcp2brzfgohm3o
     docker push crcp2brzfgohm3o.azurecr.io/sample/signal-receiver:1.0.0
     ```
 

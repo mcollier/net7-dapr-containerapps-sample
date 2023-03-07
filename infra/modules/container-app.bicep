@@ -8,8 +8,12 @@ param containerImage string
 param containerPort int
 param containerRegistryName string
 param managedIdentityName string
+param scaleRules array
+param scaleMin int = 1
+param scaleMax int = 3
 
 param environmentVars array = []
+param secrets array = []
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' existing = {
   name: managedIdentityName
@@ -52,8 +56,9 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
           identity: managedIdentity.id
         }
       ]
-      secrets: [
-      ]
+      // secrets: [
+      // ]
+      secrets: secrets
     }
     template: {
       containers: [
@@ -64,11 +69,12 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
         }
       ]
       scale: {
-        minReplicas: 1
-        maxReplicas: 3
-        rules: [
+        minReplicas: scaleMin
+        maxReplicas: scaleMax
+        // rules: [
 
-        ]
+        // ]
+        rules: scaleRules
       }
     }
   }
