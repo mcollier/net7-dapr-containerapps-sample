@@ -1,0 +1,26 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  # This name should match the route.
+  name: events
+spec:
+  type: bindings.azure.eventhubs
+  version: v1
+  metadata:
+  - name: consumerGroup
+    value: signal-receiver-dev
+  
+  # The connection string for the event hub itself, NOT the namespace!
+  - name: connectionString
+    value: Endpoint=sb://evhns-dycgupzlntjfg.servicebus.windows.net/;SharedAccessKeyName=ListenOnly;SharedAccessKey=kyWrNezx9Rb286kjYqpA/2ZFX5gEnDJgz+AEhDXc2+c=;EntityPath=sensors
+  
+  - name: storageAccountName
+    value: stdycgupzlntjfg
+  
+  # Storage account key to use for the EventProcessorHost.
+  - name: storageAccountKey
+    value: 5NUd8OC/wP5Wr5XE0PoSrbwJ/s9koB08TGO+npvtThE/U05Nso88SA9sz7w+ZnyDGxdWrDWasg9w+ASt8Yu5oQ==
+  
+  # Storage container name for the storage account name.
+  - name: storageContainerName
+    value: event-hub-checkpoints

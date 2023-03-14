@@ -76,6 +76,15 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
     resource consumerGroup 'consumergroups' = {
       name: eventHubConsumerGroupName
     }
+
+    resource listenAuthRule 'authorizationRules' = {
+      name: 'Listen'
+      properties: {
+        rights: [
+          'Listen'
+        ]
+      }
+    }
   }
 }
 
@@ -163,42 +172,42 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01'
     }
   }
 
-  resource daprBindingComponent 'daprComponents' = {
-    name: 'events'
-    properties: {
-      componentType: 'bindings.azure.eventhubs'
-      version: 'v1'
-      metadata: [
-        {
-          name: 'azureClientId'
-          value: managedIdentity.properties.clientId
-        }
-        {
-          name: 'eventHubNamespace'
-          value: eventHubNamespace.name
-        }
-        {
-          name: 'eventHub'
-          value: eventHubNamespace::sensorsEventHub.name
-        }
-        {
-          name: 'consumerGroup'
-          value: eventHubConsumerGroupName
-        }
-        {
-          name: 'storageAccountName'
-          value: storageAccount.name
-        }
-        {
-          name: 'storageContainerName'
-          value: storageAccount::blob::container.name
-        }
-      ]
-      scopes: [
-        // applicationId
-      ]
-    }
-  }
+  // resource daprBindingComponent 'daprComponents' = {
+  //   name: 'events'
+  //   properties: {
+  //     componentType: 'bindings.azure.eventhubs'
+  //     version: 'v1'
+  //     metadata: [
+  //       {
+  //         name: 'azureClientId'
+  //         value: managedIdentity.properties.clientId
+  //       }
+  //       {
+  //         name: 'eventHubNamespace'
+  //         value: eventHubNamespace.name
+  //       }
+  //       {
+  //         name: 'eventHub'
+  //         value: eventHubNamespace::sensorsEventHub.name
+  //       }
+  //       {
+  //         name: 'consumerGroup'
+  //         value: eventHubConsumerGroupName
+  //       }
+  //       {
+  //         name: 'storageAccountName'
+  //         value: storageAccount.name
+  //       }
+  //       {
+  //         name: 'storageContainerName'
+  //         value: storageAccount::blob::container.name
+  //       }
+  //     ]
+  //     scopes: [
+  //       // applicationId
+  //     ]
+  //   }
+  // }
 
 }
 

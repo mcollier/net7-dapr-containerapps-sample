@@ -2,8 +2,9 @@ POST http://localhost:5000/events HTTP/1.1
 Content-Type: application/json
 
 {
-  "sensorId": "123-abff",
-  "temperature": 45
+  "sensorId": "123-test-sensor-456",
+  "temperature": 66.56565,
+  "time": "3/14/2023 5:43:54 PM"
 }
 
 ###

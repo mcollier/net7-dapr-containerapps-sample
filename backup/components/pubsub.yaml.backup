@@ -1,0 +1,25 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: eventspubsub
+spec:
+  type: pubsub.azure.eventhubs
+  version: v1
+  metadata:
+    # Either connectionString or eventHubNamespace is required
+    # Use connectionString when *not* using Azure AD
+    - name: connectionString
+      value: "Endpoint=sb://evhns-mamr6ngarviym.servicebus.windows.net/;SharedAccessKeyName=Listen;SharedAccessKey=+Ar9Yj+y6hsWo6IrHI3stiWuIx4qjBdKS+AEhOaTrPU=;EntityPath=sensors"
+    
+    - name: enableEntityManagement
+      value: "false"
+    
+    # Checkpoint store attributes
+    - name: storageAccountName
+      value: "stmamr6ngarviym"
+    
+    - name: storageAccountKey
+      value: "vn27ILxhGulwoQylbA3KH/OMudLMQlEm2hVHNIbazJZ5Rt1DaQUnfj6jw4u3Cxq0E7b+7sJ9Gw3I+AStQ86rVA=="
+    
+    - name: storageContainerName
+      value: "event-hub-checkpoints2"

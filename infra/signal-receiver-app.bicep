@@ -8,7 +8,9 @@ param managedIdentityName string
 
 param eventHubNamespace string
 param eventHub string
+
 param storageName string
+param checkpointContainerName string
 
 resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existing = {
   name: containerRegistryName
@@ -16,6 +18,14 @@ resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existin
 
 resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
   name: storageName
+
+  resource blob 'blobServices' existing = {
+    name: 'default'
+
+    resource container 'containers' existing = {
+      name: checkpointContainerName
+    }
+  }
 }
 
 resource ehns 'Microsoft.EventHub/namespaces@2022-10-01-preview' existing = {
@@ -27,6 +37,51 @@ resource ehns 'Microsoft.EventHub/namespaces@2022-10-01-preview' existing = {
 
   resource authRule 'authorizationRules' existing = {
     name: 'RootManageSharedAccessKey'
+  }
+}
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' existing = {
+  name: managedIdentityName
+}
+
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+  name: containerAppEnvironmentName
+
+  resource daprBindingComponent 'daprComponents' = {
+    name: 'events'
+    properties: {
+      componentType: 'bindings.azure.eventhubs'
+      version: 'v1'
+      metadata: [
+        {
+          name: 'azureClientId'
+          value: managedIdentity.properties.clientId
+        }
+        {
+          name: 'eventHubNamespace'
+          value: ehns.name
+        }
+        {
+          name: 'eventHub'
+          value: ehns::eh.name
+        }
+        {
+          name: 'consumerGroup'
+          value: applicationName
+        }
+        {
+          name: 'storageAccountName'
+          value: storage.name
+        }
+        {
+          name: 'storageContainerName'
+          value: storage::blob::container.name
+        }
+      ]
+      scopes: [
+        applicationName
+      ]
+    }
   }
 }
 
@@ -58,12 +113,12 @@ module signalReceiver 'modules/container-app.bicep' = {
         custom: {
           type: 'azure-eventhub'
           metadata: {
-            consumerGroup: 'signal-receiver'
+            consumerGroup: applicationName
             eventHubNamespace: ehns.name
             eventHubName: ehns::eh.name
             unprocessedEventThreshold: '64'
             activationUnprocessedEventThreshold: '0'
-            blobContainer: 'event-hub-checkpoints'
+            blobContainer: storage::blob::container.name
             storageAccountName: storage.name
             checkpointStrategy: 'dapr'
           }
