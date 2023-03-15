@@ -31,11 +31,6 @@ param resourceToken string
 @description('Tags to be applied to Azure resources.')
 param tags object
 
-// @description('Identifier for the application.')
-// param applicationId string
-
-// param principalId string
-
 var abbrs = loadJsonContent('abbreviations.json')
 
 // Azure built-in roles (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles)
@@ -75,6 +70,10 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
 
     resource consumerGroup 'consumergroups' = {
       name: eventHubConsumerGroupName
+    }
+
+    resource consumerGroupLocal 'consumergroups' = {
+      name: '${eventHubConsumerGroupName}-local'
     }
 
     resource listenAuthRule 'authorizationRules' = {

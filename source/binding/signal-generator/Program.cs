@@ -15,7 +15,7 @@ int maxSignals = 500;
 
 // The Event Hub connection string is set as a user secert. Use the Event Hub namespace.
 // dotnet user-secrets set "EventHub:ConnectionString" "EVENT-HUB-CONNECTION-STRING"
-// Running locally, set  export DOTNET_ENVIRONMENT=Development.
+// Running locally, set export DOTNET_ENVIRONMENT=Development.
 var connectionString = config.GetValue<string>("EventHub:ConnectionString");
 // Console.WriteLine(connectionString);
 
