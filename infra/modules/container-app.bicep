@@ -27,7 +27,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existin
   name: containerRegistryName
 }
 
-resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-10-01' = {
   name: containerAppName
   location: location
   identity: {
